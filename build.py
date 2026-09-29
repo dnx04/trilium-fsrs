@@ -2,11 +2,14 @@
 """Build trilium-fsrs.zip, a Trilium ZIP export (formatVersion 2) that can be imported directly.
 
 Usage:  python3 build.py            -> fetches the latest ts-fsrs, writes trilium-fsrs.zip next to this file
+        python3 build.py --version  -> prints the package version
         python3 build.py --offline  -> reuses the cached src/ts-fsrs.js instead of downloading
 Then in Trilium: right-click a note -> Import into note -> pick the zip, UNTICK "Safe import".
 """
 import html, json, sys, urllib.request, zipfile
 from pathlib import Path
+
+VERSION = "1.0"   # shown in the footer of the Review UI; release tags must be "v" + this
 
 HERE = Path(__file__).parent
 SRC = HERE / "src"
@@ -14,6 +17,10 @@ SRC = HERE / "src"
 # External packages: name -> UMD bundle path inside the npm package. Always the latest version.
 CDN = "https://cdn.jsdelivr.net/npm"
 PACKAGES = {"ts-fsrs": "dist/index.umd.js"}
+
+if "--version" in sys.argv:
+    print(VERSION)
+    sys.exit()
 
 def fetch(url):
     with urllib.request.urlopen(url, timeout=30) as r:
@@ -81,7 +88,7 @@ ABOUT = (
 
 files = {
     "Flashcards.html": "",
-    "Flashcards/Review UI.html": (SRC / "review-ui.html").read_text(),
+    "Flashcards/Review UI.html": (SRC / "review-ui.html").read_text().replace("__VERSION__", VERSION),
     "Flashcards/Review UI/review.js": (SRC / "review.js").read_text(),
     "Flashcards/srs-state.json": (SRC / "srs-state.json").read_text(),
     "Flashcards/ts-fsrs.js": libs["ts-fsrs"][0],

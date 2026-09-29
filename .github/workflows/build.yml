@@ -24,6 +24,10 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Check the release tag matches the package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: test "$GITHUB_REF_NAME" = "v$(python3 build.py --version)"
+
       - name: Build trilium-fsrs.zip (fetches the latest ts-fsrs)
         run: python3 build.py
 

@@ -118,21 +118,17 @@ const DEFAULTS = {
   maximumInterval: 36500,   // days
   learningSteps: '1m 10m',
   relearningSteps: '10m',
-  spread: 'balance',        // how review dates are varied: 'balance' (least busy day), 'fuzz' (random) or 'none'
   weights: '',              // FSRS weights (21 numbers); empty = defaults
 };
 const DEFAULT_W = generatorParameters().w;
 db.settings ??= {};
-if (db.settings.spread === undefined && ('loadBalance' in db.settings || 'fuzz' in db.settings))   // saved by an older version
-  db.settings.spread = db.settings.loadBalance === false ? (db.settings.fuzz === false ? 'none' : 'fuzz') : 'balance';
-delete db.settings.loadBalance; delete db.settings.fuzz;
+for (const k of ['spread', 'loadBalance', 'fuzz']) delete db.settings[k];   // options of earlier versions; the load balancer is always on
 let S = { ...DEFAULTS, ...db.settings };
 
 const STEP = /^\d+[mhd]$/;
 const words = str => str.split(/[\s,\[\]]+/).filter(Boolean);
 function checkSettings(v) {
   if (v.buttons !== 2 && v.buttons !== 4) return 'Answer buttons must be 2 or 4.';
-  if (!['balance', 'fuzz', 'none'].includes(v.spread)) return 'Choose how review dates are varied.';
   if (!(v.newPerDay >= 0)) return 'New cards per day must be 0 or more.';
   if (!(v.maxReviews >= 0)) return 'Maximum reviews per day must be 0 or more (0 = unlimited).';
   if (!(v.retention >= 0.7 && v.retention <= 0.99)) return 'Desired retention must be between 0.70 and 0.99.';
@@ -149,7 +145,7 @@ function buildFsrs(v) {
   return fsrs(generatorParameters({
     request_retention: v.retention,
     maximum_interval: v.maximumInterval,
-    enable_fuzz: false,                       // dates are varied by spread() below
+    enable_fuzz: false,                       // review dates are varied by balance() below
     learning_steps: words(v.learningSteps),
     relearning_steps: words(v.relearningSteps),
     ...(w.length ? { w } : {}),
@@ -189,15 +185,15 @@ function idealInterval(stability) {
 
 // Moves the due date of a card that has just been scheduled for review (state 2) inside its fuzz range.
 // prev is the card as it was before the answer; id is used to leave the card itself out of the counts.
-function spread(card, prev, id) {
-  if (S.spread === 'none' || card.state !== 2) return card;
+function balance(card, prev, id) {
+  if (card.state !== 2) return card;
   const ideal = idealInterval(card.stability);
   const minimum = prev.state === 2 ? minimumFuzzInterval(ideal, prev.scheduled_days, S.maximumInterval) : 1;
   const [lo, hi] = fuzzBounds(ideal, minimum, S.maximumInterval);
   let pick = clampN(Math.round(ideal), minimum, S.maximumInterval);
   if (hi > lo) {
     pick = lo + Math.floor(Math.random() * (hi - lo + 1));                        // plain fuzz
-    if (S.spread === 'balance' && ideal <= MAX_BALANCE_INTERVAL && minimum <= MAX_BALANCE_INTERVAL) {
+    if (ideal <= MAX_BALANCE_INTERVAL && minimum <= MAX_BALANCE_INTERVAL) {
       const today = dayStart().getTime(), dayIndex = t => Math.round((dayStart(new Date(t)).getTime() - today) / DAY);
       const load = {}, siblingDays = [], group = cards.find(c => c.id === id)?.group;
       for (const c of cards) {
@@ -292,7 +288,7 @@ function renderReview() {
 function grade(rating) {
   const c = queue.shift();
   const prev = db.cards[c.id] ?? createEmptyCard(now());
-  const card = spread(f.next(prev, now(), rating).card, prev, c.id);
+  const card = balance(f.next(prev, now(), rating).card, prev, c.id);
   db.cards[c.id] = card;
   db.logs.push({ c: c.id, t: Date.now(), r: rating, s: prev.state, d: Math.min(Date.now() - shownAt, 60e3) });
   if (new Date(card.due) - Date.now() < LEARN_AHEAD_MS) queue.push(c);   // learning step: see again this session
@@ -492,11 +488,6 @@ function renderSettings(v = S, msg = '') {
       ${num('maximumInterval', 'Maximum interval (days)', 'No card is scheduled further out than this.', 'min="1" step="1"')}
       ${txt('learningSteps', 'Learning steps', 'Delays for a new card, e.g. <code>1m 10m</code>. Empty: go straight to days.')}
       ${txt('relearningSteps', 'Relearning steps', 'Delays after forgetting a review card, e.g. <code>10m</code>.')}
-    </div>
-    <div class="fc-sec"><h4>Review dates</h4>
-      <label class="fc-field"><span>Vary review dates<small>Spreads reviews so they don't pile up on the same day. Only intervals of about 3 days or more are changed, by at most ±5–15%, and an interval never gets shorter than the previous one.</small></span>
-        <select data-k="spread">${[['balance', 'Load balancer'], ['fuzz', 'Random fuzz'], ['none', 'None']].map(([k, l]) => `<option value="${k}" ${v.spread === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-      <div class="fc-sub">Load balancer: follows Anki's. It prefers quiet days, avoids days near cloze cards from the same line, and leaves intervals over 90 days to plain fuzz. Random fuzz: a random day in the range. None: exact intervals.</div>
     </div>
     <div class="fc-sec"><h4>Advanced</h4>
       <label class="fc-field fc-wide"><span>FSRS weights<small>${DEFAULT_W.length} numbers, for example from the FSRS optimizer. Empty uses the defaults below.</small></span>

@@ -7,7 +7,7 @@ Spaced-repetition flashcards **inside [TriliumNext](https://github.com/TriliumNe
 - **2 or 4 answer buttons** (Forgot / Remembered, or Again / Hard / Good / Easy)
 - **Statistics:** streak, retention, review heatmap, card maturity, workload forecast
 - **Settings tab:** every scheduling parameter, editable without touching code
-- **Load balancer** modelled on Anki's, so reviews don't pile up on one day
+- **Load balancer** (always on) modelled on Anki's, so reviews don't pile up on one day
 - **Weight optimizer** that fits FSRS to your own review history
 - Uses Trilium's theme variables, so it follows your light or dark theme
 
@@ -100,14 +100,13 @@ The **Settings** tab stores everything in `srs-state`; no code editing needed.
 | Maximum interval | 36500 | days |
 | Learning steps | `1m 10m` | delays for a new card |
 | Relearning steps | `10m` | delays after forgetting a review card |
-| Vary review dates | Load balancer | Load balancer, Random fuzz, or None |
 | FSRS weights | empty | 21 numbers; empty uses the defaults |
 
 FSRS's own guidance is to keep learning and relearning steps short enough to finish on the same day (a single step such as `10m` is the documented good case, and `1d` steps are discouraged).
 
 ## Load balancer
 
-The default *Vary review dates* mode moves each newly scheduled review inside its normal fuzz range (about ±15% for short intervals down to ±5% beyond 20 days) to a quieter day. It follows the logic of Anki's built-in load balancer:
+The load balancer is always on. It moves each newly scheduled review inside its normal fuzz range (about ±15% for short intervals down to ±5% beyond 20 days) to a quieter day. It follows the logic of Anki's built-in load balancer:
 
 - picks a day at random with weight `(1 / cards due)^2.15 × (1 / interval)^3` (an empty day has weight 1), so quiet and slightly earlier days are favoured
 - avoids days near other cloze cards from the same line
