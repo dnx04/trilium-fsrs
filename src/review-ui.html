@@ -1,0 +1,115 @@
+<style>
+  .fc-root {
+    --fc-green: #2fa565; --fc-red: #dc4c4c; --fc-blue: #3b82f6; --fc-amber: #d99a2b;
+    --fc-line: color-mix(in srgb, currentColor 16%, transparent);
+    --fc-soft: var(--card-background-color, color-mix(in srgb, currentColor 7%, transparent));
+    --fc-muted: var(--muted-text-color, color-mix(in srgb, currentColor 60%, transparent));
+    max-width: 760px; margin: 1.5em auto; padding: 0 1em; font-size: 1.1em; outline: none;
+    color: var(--main-text-color, inherit);
+  }
+  .fc-root * { box-sizing: border-box; }
+
+  /* tabs: same look as Trilium's button groups */
+  .fc-tabs { display: inline-flex; padding: 3px; border-radius: 10px; margin-bottom: 1.2em;
+    background: var(--button-group-background-color, color-mix(in srgb, currentColor 9%, transparent)); }
+  .fc-tabs button { font: inherit; font-size: .85em; border: 0; background: none; color: inherit; cursor: pointer;
+    padding: .35em 1.1em; border-radius: 8px; opacity: .75; }
+  .fc-tabs button:hover { opacity: 1; }
+  .fc-tabs button.active { opacity: 1; box-shadow: 0 1px 3px #0003;
+    background: var(--button-group-active-button-background-color, color-mix(in srgb, currentColor 16%, transparent));
+    color: var(--button-group-active-button-color, inherit); }
+
+  /* review */
+  .fc-top { display: flex; justify-content: space-between; align-items: baseline; font-size: .8em; margin-bottom: .8em; color: var(--fc-muted); }
+  .fc-counts span { font-weight: 600; margin-right: .9em; }
+  .fc-counts .new { color: var(--fc-blue); } .fc-counts .learn { color: var(--fc-red); } .fc-counts .review { color: var(--fc-green); }
+  .fc-counts .cur { text-decoration: underline; text-underline-offset: 4px; }
+  .fc-card { background: var(--fc-soft); border: 1px solid var(--fc-line); border-radius: 14px;
+    padding: 1.6em 1.4em; text-align: center; overflow-wrap: anywhere; }
+  .fc-card + .fc-card { margin-top: .7em; }
+  .fc-card img { max-width: 100%; border-radius: 6px; }
+  .fc-card pre, .fc-card ul, .fc-card ol { text-align: left; }
+  .fc-cloze { color: var(--fc-blue); font-weight: 700; }
+  .fc-empty { text-align: center; padding: 3em 1em; }
+  .fc-empty h3 { margin: 0 0 .3em; }
+  .fc-empty p { color: var(--fc-muted); margin: .2em 0; }
+
+  .fc-btns { margin-top: 1.2em; display: flex; gap: .7em; }
+  .fc-btn { --c: var(--fc-blue); flex: 1; font: inherit; font-size: .95em; color: inherit; cursor: pointer;
+    padding: .75em 1em; border-radius: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+    background: color-mix(in srgb, var(--c) 16%, transparent);
+    transition: background .12s, transform .05s; }
+  .fc-btn:hover { background: color-mix(in srgb, var(--c) 30%, transparent); }
+  .fc-btn:active { transform: translateY(1px); }
+  .fc-btn:focus-visible { outline: 2px solid var(--c); outline-offset: 2px; }
+  .fc-btn b { font-weight: 600; }
+  .fc-btn small { opacity: .75; font-size: .8em; }
+  .fc-btn.again { --c: var(--fc-red); } .fc-btn.hard { --c: var(--fc-amber); } .fc-btn.good { --c: var(--fc-green); } .fc-btn.easy { --c: var(--fc-blue); }
+  .fc-btn { min-width: 0; }
+  .fc-btn kbd { font: inherit; font-size: .75em; opacity: .6; border: 1px solid var(--fc-line); border-radius: 4px; padding: 0 .35em; margin-right: .4em; }
+  .fc-src { color: var(--fc-muted); text-decoration: none; }
+  .fc-src:hover { text-decoration: underline; }
+
+  /* statistics */
+  .fc-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .7em; margin-bottom: 1.2em; }
+  .fc-tile { background: var(--fc-soft); border: 1px solid var(--fc-line); border-radius: 12px; padding: .8em 1em; }
+  .fc-tile b { display: block; font-size: 1.5em; line-height: 1.2; }
+  .fc-tile span { font-size: .75em; color: var(--fc-muted); }
+  .fc-sec { background: var(--fc-soft); border: 1px solid var(--fc-line); border-radius: 12px; padding: 1em 1.1em; margin-bottom: 1em; }
+  .fc-sec h4 { margin: 0 0 .7em; font-size: .95em; }
+  .fc-sec .fc-sub { font-size: .75em; color: var(--fc-muted); margin-top: .6em; }
+  .fc-bars { display: flex; align-items: flex-end; gap: 2px; height: 120px; border-bottom: 1px solid var(--fc-line); }
+  .fc-bar { flex: 1; display: flex; justify-content: flex-end; height: 100%; min-width: 0; }
+  .fc-bar i { display: block; width: 100%; background: var(--fc-green); }
+  .fc-bar i.again { background: var(--fc-red); }
+  .fc-bar i.fut { background: var(--fc-blue); }
+  .fc-axis { display: flex; justify-content: space-between; font-size: .7em; color: var(--fc-muted); margin-top: .3em; }
+  .fc-stack { display: flex; height: 22px; border-radius: 6px; overflow: hidden; background: var(--fc-line); }
+  .fc-stack i { display: block; height: 100%; }
+  .fc-legend { display: flex; flex-wrap: wrap; gap: .3em 1.1em; font-size: .8em; margin-top: .7em; }
+  .fc-legend span::before { content: ""; display: inline-block; width: .7em; height: .7em; border-radius: 3px; margin-right: .4em; background: var(--k); }
+  .fc-heat { overflow-x: auto; padding-bottom: .3em; }
+  .fc-hm { display: flex; gap: 3px; width: max-content; }
+  .fc-hm-col { display: flex; flex-direction: column; gap: 3px; }
+  .fc-hm-col em { font-style: normal; font-size: .65em; height: 1.1em; line-height: 1.1em; color: var(--fc-muted); white-space: nowrap; }
+  .fc-hm-col u { display: block; width: 11px; height: 11px; border-radius: 3px; text-decoration: none;
+    background: color-mix(in srgb, currentColor 9%, transparent); }
+  .fc-hm-col u.l1 { background: color-mix(in srgb, var(--fc-green) 28%, transparent); }
+  .fc-hm-col u.l2 { background: color-mix(in srgb, var(--fc-green) 50%, transparent); }
+  .fc-hm-col u.l3 { background: color-mix(in srgb, var(--fc-green) 75%, transparent); }
+  .fc-hm-col u.l4 { background: var(--fc-green); }
+  .fc-hm-col u.off { visibility: hidden; }
+
+  /* settings */
+  .fc-field { display: flex; justify-content: space-between; align-items: center; gap: 1em; padding: .55em 0; border-top: 1px solid var(--fc-line); }
+  .fc-sec h4 + .fc-field { border-top: 0; padding-top: 0; }
+  .fc-field > span { flex: 1; }
+  .fc-field small { display: block; color: var(--fc-muted); font-size: .75em; margin-top: 2px; }
+  .fc-field input[type=number], .fc-field input[type=text] { width: 9em; font: inherit; font-size: .9em; padding: .35em .6em; text-align: right;
+    color: var(--input-text-color, inherit); background: var(--input-background-color, color-mix(in srgb, currentColor 8%, transparent));
+    border: 1px solid var(--fc-line); border-radius: 8px; }
+  .fc-field textarea { width: 100%; font: inherit; font-family: monospace; font-size: .8em; padding: .5em .6em; resize: vertical;
+    color: var(--input-text-color, inherit); background: var(--input-background-color, color-mix(in srgb, currentColor 8%, transparent));
+    border: 1px solid var(--fc-line); border-radius: 8px; }
+  .fc-field select { font: inherit; font-size: .9em; padding: .35em .6em; color: var(--input-text-color, inherit);
+    background: var(--input-background-color, color-mix(in srgb, currentColor 8%, transparent)); border: 1px solid var(--fc-line); border-radius: 8px; }
+  .fc-field input:focus, .fc-field textarea:focus { outline: 2px solid var(--fc-blue); outline-offset: 1px; }
+  .fc-wide { flex-direction: column; align-items: stretch; }
+  .fc-check { justify-content: flex-start; cursor: pointer; }
+  .fc-check input { width: 1.1em; height: 1.1em; accent-color: var(--fc-green); }
+  .fc-check > span { order: 2; }
+  .fc-actions { margin-top: 0; }
+  .fc-msg { margin-top: .8em; font-size: .85em; min-height: 1.4em; color: var(--fc-muted); }
+  .fc-msg .ok { color: var(--fc-green); } .fc-msg .bad { color: var(--fc-red); }
+  .fc-field code { font-size: .95em; }
+
+  .fc-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .fc-progress { height: 8px; border-radius: 4px; background: var(--fc-line); overflow: hidden; margin-top: .8em; }
+  .fc-progress i { display: block; height: 100%; background: var(--fc-blue); transition: width .2s; }
+  .fc-table { width: 100%; border-collapse: collapse; margin-top: .8em; font-size: .9em; }
+  .fc-table th, .fc-table td { padding: .35em .5em; border-top: 1px solid var(--fc-line); text-align: right; }
+  .fc-table th:first-child, .fc-table td:first-child { text-align: left; }
+  .fc-table tr:first-child th { border-top: 0; color: var(--fc-muted); font-weight: 500; }
+</style>
+<div class="fc-root" tabindex="0"></div>

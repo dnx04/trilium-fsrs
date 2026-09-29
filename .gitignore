@@ -1,0 +1,4 @@
+# build output and the downloaded library (build.py fetches the latest ts-fsrs)
+trilium-fsrs.zip
+src/ts-fsrs.js
+__pycache__/
