@@ -462,11 +462,12 @@ $root.on('click', '.fc-run', () => runOptimizer());
 $root.on('click', '.fc-stop', () => { opt.cancel = true; });
 $root.on('click', '.fc-use', () => {
   const v = readSettings(); v.weights = opt.result.w.join(', ');
-  renderSettings(v, 'Weights filled in. Press Save to keep them.');
+  const err = commitSettings(v);
+  renderSettings(err ? v : S, err ? `<span class="bad">${err} Not saved.</span>` : '<span class="ok">Weights saved.</span>');
 });
 
 // ---------- settings tab ----------
-function renderSettings(v = S, msg = '') {
+function renderSettings(v = S, msg = 'Changes are saved automatically.') {
   const num = (k, label, help, attrs = '') => `<label class="fc-field"><span>${label}<small>${help}</small></span>
     <input type="number" data-k="${k}" value="${v[k]}" ${attrs}></label>`;
   const txt = (k, label, help) => `<label class="fc-field"><span>${label}<small>${help}</small></span>
@@ -495,8 +496,7 @@ function renderSettings(v = S, msg = '') {
     </div>
     ${optBlock()}
     <div class="fc-btns fc-actions">
-      <button class="fc-btn good fc-save"><b>Save</b></button>
-      <button class="fc-btn fc-defaults"><b>Load defaults</b></button>
+      <button class="fc-btn fc-defaults"><b>Restore defaults</b></button>
     </div>
     <div class="fc-msg">${msg}</div>`);
 }
@@ -510,13 +510,24 @@ function readSettings() {
   return v;
 }
 
-$root.on('click', '.fc-save', () => {
-  const v = readSettings(), err = checkSettings(v);
-  if (err) return renderSettings(v, `<span class="bad">${err}</span>`);
-  S = v; db.settings = v; f = buildFsrs(S); buildQueue(); save();
-  renderSettings(S, '<span class="ok">Saved. The new settings apply from the next review.</span>');
+// Validates new settings, applies them and stores them. Returns the error message, or null on success.
+function commitSettings(v) {
+  const err = checkSettings(v);
+  if (err) return err;
+  S = { ...v }; db.settings = { ...v }; f = buildFsrs(S); buildQueue(); save();
+  return null;
+}
+
+// Every change is saved as soon as it is committed (field left, Enter pressed, option picked).
+$root.on('change', '[data-k]', () => {
+  const err = commitSettings(readSettings());
+  $view.find('.fc-msg').html(err ? `<span class="bad">${err} Not saved.</span>` : '<span class="ok">Saved.</span>');
+  if (!err) updateOpt();
 });
-$root.on('click', '.fc-defaults', () => renderSettings(DEFAULTS, 'Defaults loaded. Press Save to keep them.'));
+$root.on('click', '.fc-defaults', () => {
+  commitSettings({ ...DEFAULTS });
+  renderSettings(S, '<span class="ok">Defaults restored and saved.</span>');
+});
 
 $root.on('click', '[data-tab]', e => {
   tab = e.currentTarget.dataset.tab;

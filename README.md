@@ -89,7 +89,7 @@ The **Statistics** tab shows: reviews and time today, current streak, 30-day ret
 
 ## Settings
 
-The **Settings** tab stores everything in `srs-state`; no code editing needed.
+The **Settings** tab stores everything in `srs-state`; no code editing needed. Changes are saved automatically as soon as you leave a field or pick an option, and an invalid value is reported instead of saved. *Restore defaults* resets everything.
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -119,7 +119,7 @@ In a deck simulation (800 cards, 300 days, 6 seeds) it cut the day-to-day spread
 
 FSRS ships with default weights fitted to many learners. **Settings → Optimize weights** fits them to *your* history. It unlocks at **1000 usable reviews** (reviews of a card at least one day after its previous review), and only runs when you press the button.
 
-How it works: it follows the training procedure of the official FSRS-6 optimizer (`fsrs-rs`): pretraining of the initial stabilities, outlier filtering, Adam with a cosine learning-rate schedule, recency weighting and an L2 pull toward the initial weights. To decide whether the result is worth using, it runs **5-fold cross-validation**: every card is held out once, and the new weights are only offered if they predict those held-out reviews better than your current weights by at least 1.5 standard errors. Then **Use these weights** fills the weights box, and you press **Save**.
+How it works: it follows the training procedure of the official FSRS-6 optimizer (`fsrs-rs`): pretraining of the initial stabilities, outlier filtering, Adam with a cosine learning-rate schedule, recency weighting and an L2 pull toward the initial weights. To decide whether the result is worth using, it runs **5-fold cross-validation**: every card is held out once, and the new weights are only offered if they predict those held-out reviews better than your current weights by at least 1.5 standard errors. **Use these weights** then saves them as your FSRS weights.
 
 Good to know:
 
