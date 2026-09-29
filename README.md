@@ -44,10 +44,11 @@ Flashcards        render note (the review page) and the folder for everything be
  │   └─ review.js JS frontend code note: the app
  ├─ srs-state     JSON code note where your review state and settings live
  ├─ ts-fsrs       code note with the ts-fsrs library   (#fcLib=ts-fsrs)
- └─ optimizer     code note with the weight optimizer  (#fcLib=optimizer)
+ ├─ optimizer     code note with the weight optimizer  (#fcLib=optimizer)
+ └─ About and licenses   text note with the source link and third-party notices
 ```
 
-Don't rename the labels (`#srsState`, `#fcLib=…`) and don't move the notes out of `Flashcards`.
+Don't rename the labels (`#srsState`, `#fcLib=…`) and don't move the notes out of `Flashcards`. `About and licenses` is only informational and can be deleted.
 
 ## Writing cards
 
@@ -166,9 +167,13 @@ tests/              checks that run in CI
 ## Credits
 
 - [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) (MIT), bundled into the package at build time.
-- The FSRS algorithm and the official optimizer, [fsrs-rs](https://github.com/open-spaced-repetition/fsrs-rs): the weight optimizer is a JavaScript re-implementation of its FSRS-6 training procedure.
-- [Anki](https://github.com/ankitects/anki): the load balancer, fuzz ranges and sibling handling are ported from its scheduler (AGPL-3.0).
+- The FSRS algorithm and the official optimizer, [fsrs-rs](https://github.com/open-spaced-repetition/fsrs-rs) (BSD-3-Clause): the weight optimizer is a JavaScript re-implementation of its FSRS-6 training procedure.
+- [Anki](https://github.com/ankitects/anki) (AGPL-3.0-or-later): the load balancer, fuzz ranges and sibling handling are ported from its scheduler.
+
+The full notices are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and inside the package.
 
 ## License
 
-No license has been chosen yet. Note that the load balancer is derived from Anki's AGPL-3.0 code, which affects which licenses the project can use.
+Copyright (C) 2026 dnx04. Licensed under the [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0). This matches the license of the Anki scheduler code the load balancer is ported from.
+
+In short: you may use, study, modify and share this project, but if you distribute a modified version, or let others use one over a network, you must make the corresponding source available under the same license (see section 13 of the license). Third-party components keep their own licenses, listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

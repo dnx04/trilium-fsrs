@@ -5,7 +5,7 @@ Usage:  python3 build.py            -> fetches the latest ts-fsrs, writes triliu
         python3 build.py --offline  -> reuses the cached src/ts-fsrs.js instead of downloading
 Then in Trilium: right-click a note -> Import into note -> pick the zip, UNTICK "Safe import".
 """
-import json, sys, urllib.request, zipfile
+import html, json, sys, urllib.request, zipfile
 from pathlib import Path
 
 HERE = Path(__file__).parent
@@ -40,7 +40,7 @@ for name, (_, version) in libs.items():
     print(f"{name}: {version}")
 
 ID = dict(review="fsrsReview01", ui="fsrsReviewUi1", js="fsrsReviewJs1",
-          state="fsrsState001", lib="fsrsTsFsrs01", opt="fsrsOptimizr1")
+          state="fsrsState001", lib="fsrsTsFsrs01", opt="fsrsOptimizr1", about="fsrsAbout0001")
 
 def label(name, value="", pos=10):
     return {"type": "label", "name": name, "value": value, "isInheritable": False, "position": pos}
@@ -63,12 +63,21 @@ lib = note("lib", "ts-fsrs", "code", "text/javascript", "ts-fsrs.js", ["review"]
            attrs=[label("fcLib", "ts-fsrs"), label("disableVersioning", "true", 20)])
 optimizer = note("opt", "optimizer", "code", "text/javascript", "optimizer.js", ["review"], 40,
                  attrs=[label("fcLib", "optimizer"), label("disableVersioning", "true", 20)])
+about = note("about", "About and licenses", "text", "text/html", "About and licenses.html", ["review"], 50)
 # The Review render note is the top-level folder: its children hold the UI, the state and the library.
 review = note("review", "Flashcards", "render", "", "Flashcards.html", [], 10, dir_name="Flashcards",
               attrs=[{"type": "relation", "name": "renderNote", "value": ID["ui"], "isInheritable": False, "position": 10}],
-              children=[review_ui, state, lib, optimizer])
+              children=[review_ui, state, lib, optimizer, about])
 
 meta = {"formatVersion": 2, "appVersion": "0.99.0", "files": [review]}
+
+ABOUT = (
+    "<h2>trilium-fsrs</h2>"
+    '<p>FSRS flashcards for TriliumNext. Source code and documentation: '
+    '<a href="https://github.com/dnx04/trilium-fsrs">github.com/dnx04/trilium-fsrs</a>. '
+    "Licensed under the GNU Affero General Public License v3.0; the license text is in the repository (<code>LICENSE</code>).</p>"
+    "<h3>Third-party notices</h3><pre>" + html.escape((HERE / "THIRD-PARTY-NOTICES.md").read_text()) + "</pre>"
+)
 
 files = {
     "Flashcards.html": "",
@@ -76,6 +85,7 @@ files = {
     "Flashcards/Review UI/review.js": (SRC / "review.js").read_text(),
     "Flashcards/srs-state.json": (SRC / "srs-state.json").read_text(),
     "Flashcards/ts-fsrs.js": libs["ts-fsrs"][0],
+    "Flashcards/About and licenses.html": ABOUT,
     "Flashcards/optimizer.js": (SRC / "optimizer.js").read_text(),
 }
 
