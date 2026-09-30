@@ -3,14 +3,16 @@ const LEARN_AHEAD_MS = 20 * 60e3;
 const $root = api.$container.find('.fc-root');
 
 // ---------- load libraries (UMD builds stored in code notes labeled #fcLib=<name>) ----------
-const { libs, notes, db } = await api.runOnBackend(() => {
+const { libs, notes, db, storedSettings } = await api.runOnBackend(() => {
   const libs = {};
   for (const n of api.searchForNotes('#fcLib')) libs[n.getLabelValue('fcLib')] = n.getContent();
   const notes = api.searchForNotes('#flashcards').map(n => ({
     noteId: n.noteId, title: n.title, mime: n.mime, content: n.getContent()
   }));
   const db = JSON.parse(api.searchForNote('#srsState').getContent() || '{}');
-  return { libs, notes, db };
+  const settingsNote = api.searchForNote('#srsSettings');   // null when only an older version's notes are installed
+  const storedSettings = settingsNote ? JSON.parse(settingsNote.getContent() || '{}') : null;
+  return { libs, notes, db, storedSettings };
 });
 const loadUmd = code => { const m = { exports: {} }; new Function('module', 'exports', 'define', code)(m, m.exports, undefined); return m.exports; };
 const FSRS = loadUmd(libs['ts-fsrs']);
@@ -121,9 +123,15 @@ const DEFAULTS = {
   weights: '',              // FSRS weights (21 numbers); empty = defaults
 };
 const DEFAULT_W = generatorParameters().w;
-db.settings ??= {};
-for (const k of ['spread', 'loadBalance', 'fuzz']) delete db.settings[k];   // options of earlier versions; the load balancer is always on
-let S = { ...DEFAULTS, ...db.settings };
+// Settings live in their own note (#srsSettings). Older versions kept them inside srs-state; those are moved over
+// the first time the settings note is still empty. Without a settings note the old location keeps working.
+const hasSettingsNote = storedSettings !== null;
+const legacySettings = db.settings;
+const migrateSettings = hasSettingsNote && legacySettings && !Object.keys(storedSettings).length;
+const savedSettings = hasSettingsNote ? (migrateSettings ? legacySettings : storedSettings) : (legacySettings ?? {});
+if (hasSettingsNote) delete db.settings;
+for (const k of ['spread', 'loadBalance', 'fuzz']) delete savedSettings[k];   // options of earlier versions; the load balancer is always on
+let S = { ...DEFAULTS, ...savedSettings };
 
 const STEP = /^\d+[mhd]$/;
 const words = str => str.split(/[\s,\[\]]+/).filter(Boolean);
@@ -238,6 +246,13 @@ function save() {
   const json = JSON.stringify(db);
   saving = saving.then(() => api.runOnBackend(j => { api.searchForNote('#srsState').setContent(j); }, [json]));
 }
+function saveSettings() {
+  if (!hasSettingsNote) { db.settings = { ...S }; return save(); }
+  const json = JSON.stringify(S);
+  saving = saving.then(() => api.runOnBackend(j => { api.searchForNote('#srsSettings').setContent(j); }, [json]));
+}
+if (migrateSettings) saveSettings();   // copy the old settings into their note …
+if (hasSettingsNote && legacySettings) save();   // … and drop them from srs-state
 
 // ---------- UI ----------
 $root.html(`
@@ -514,7 +529,7 @@ function readSettings() {
 function commitSettings(v) {
   const err = checkSettings(v);
   if (err) return err;
-  S = { ...v }; db.settings = { ...v }; f = buildFsrs(S); buildQueue(); save();
+  S = { ...v }; f = buildFsrs(S); buildQueue(); saveSettings();
   return null;
 }
 

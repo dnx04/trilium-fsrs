@@ -42,13 +42,16 @@ You get this tree:
 Flashcards        render note (the review page) and the folder for everything below
  ├─ Review UI     HTML code note with the styles and page skeleton
  │   └─ review.js JS frontend code note: the app
- ├─ srs-state     JSON code note where your review state and settings live
+ ├─ srs-state     JSON code note with your review history and every card's FSRS state
+ ├─ srs-settings  JSON code note with your settings
  ├─ ts-fsrs       code note with the ts-fsrs library   (#fcLib=ts-fsrs)
  ├─ optimizer     code note with the weight optimizer  (#fcLib=optimizer)
  └─ About and licenses   text note with the source link and third-party notices
 ```
 
-Don't rename the labels (`#srsState`, `#fcLib=…`) and don't move the notes out of `Flashcards`. `About and licenses` is only informational and can be deleted.
+Don't rename the labels (`#srsState`, `#srsSettings`, `#fcLib=…`) and don't move the notes out of `Flashcards`. `About and licenses` is only informational and can be deleted.
+
+The helper notes are **archived**, so they stay out of your way: with Trilium's *Hide archived notes* option on (toggle it with **Ctrl+H**) the `Flashcards` note shows no children. Turn the option off to see them, for example to look at `srs-settings` or to edit the code. The scripts still find archived notes.
 
 ## Writing cards
 
@@ -89,7 +92,7 @@ The **Statistics** tab shows: reviews and time today, current streak, 30-day ret
 
 ## Settings
 
-The **Settings** tab stores everything in `srs-state`; no code editing needed. Changes are saved automatically as soon as you leave a field or pick an option, and an invalid value is reported instead of saved. *Restore defaults* resets everything.
+The **Settings** tab keeps everything in the `srs-settings` note; no code editing needed. Changes are saved automatically as soon as you leave a field or pick an option, and an invalid value is reported instead of saved. *Restore defaults* resets everything.
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -131,11 +134,11 @@ Good to know:
 
 ## Your data
 
-Everything is in the `srs-state` note as JSON: `cards` (the FSRS state of each card), `logs` (every review: card, time, grade, previous state, seconds taken) and `settings`. Nothing leaves your Trilium. Back it up like any other note, and note that its revisions are disabled (`#disableVersioning`) because it changes on every review.
+Everything is in two JSON notes. `srs-state` holds `cards` (the FSRS state of each card) and `logs` (every review: card, time, grade, previous state, seconds taken). `srs-settings` holds your settings. Keeping them apart means a reset or restore of one doesn't touch the other. Nothing leaves your Trilium. Back it up like any other note, and note that its revisions are disabled (`#disableVersioning`) because it changes on every review.
 
 ## Updating
 
-Importing the zip again creates a second `Flashcards` tree with an empty `srs-state`. To keep your history, copy the content of your old `srs-state` note into the new one, then delete the old tree. Alternatively, replace only the notes that changed (`review.js`, `Review UI`, `optimizer`); `review.js` and `optimizer` should always be updated together.
+Importing the zip again creates a second `Flashcards` tree with empty `srs-state` and `srs-settings` notes. To keep your history and settings, copy the content of your old `srs-state` and `srs-settings` notes into the new ones, then delete the old tree. (If you only copy `srs-state` from a version before 1.0.2, its settings are moved into `srs-settings` automatically the first time you open the page.) Alternatively, replace only the notes that changed (`review.js`, `Review UI`, `optimizer`); `review.js` and `optimizer` should always be updated together. Without an `srs-settings` note the page simply keeps storing settings in `srs-state`, as older versions did.
 
 ## Building from source
 

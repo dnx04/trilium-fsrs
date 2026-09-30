@@ -9,7 +9,7 @@ Then in Trilium: right-click a note -> Import into note -> pick the zip, UNTICK 
 import html, json, sys, urllib.request, zipfile
 from pathlib import Path
 
-VERSION = "1.0.1"   # shown in the footer of the Review UI; release tags must be "v" + this
+VERSION = "1.0.2"   # shown in the footer of the Review UI; release tags must be "v" + this
 
 HERE = Path(__file__).parent
 SRC = HERE / "src"
@@ -47,15 +47,16 @@ for name, (_, version) in libs.items():
     print(f"{name}: {version}")
 
 ID = dict(review="fsrsReview01", ui="fsrsReviewUi1", js="fsrsReviewJs1",
-          state="fsrsState001", lib="fsrsTsFsrs01", opt="fsrsOptimizr1", about="fsrsAbout0001")
+          state="fsrsState001", settings="fsrsSettings1", lib="fsrsTsFsrs01", opt="fsrsOptimizr1", about="fsrsAbout0001")
 
 def label(name, value="", pos=10):
     return {"type": "label", "name": name, "value": value, "isInheritable": False, "position": pos}
 
-def note(key, title, ntype, mime, data_file, parents, position, attrs=(), dir_name=None, children=()):
+def note(key, title, ntype, mime, data_file, parents, position, attrs=(), dir_name=None, children=(), archived=True):
+    attrs = list(attrs) + ([label("archived", "", 90)] if archived else [])   # helper notes are hidden in the tree
     m = {"noteId": ID[key], "notePath": [ID[k] for k in parents] + [ID[key]], "title": title,
          "notePosition": position, "prefix": None, "isExpanded": bool(children), "type": ntype,
-         "mime": mime, "attributes": list(attrs), "dataFileName": data_file, "children": list(children)}
+         "mime": mime, "attributes": attrs, "dataFileName": data_file, "children": list(children)}
     if ntype == "text":
         m["format"] = "html"
     if children:
@@ -66,15 +67,17 @@ review_js = note("js", "review.js", "code", "application/javascript;env=frontend
 review_ui = note("ui", "Review UI", "code", "text/html", "Review UI.html", ["review"], 10, children=[review_js])
 state = note("state", "srs-state", "code", "application/json", "srs-state.json", ["review"], 20,
              attrs=[label("srsState"), label("disableVersioning", "true", 20)])
-lib = note("lib", "ts-fsrs", "code", "text/javascript", "ts-fsrs.js", ["review"], 30,
+settings = note("settings", "srs-settings", "code", "application/json", "srs-settings.json", ["review"], 30,
+                attrs=[label("srsSettings")])
+lib = note("lib", "ts-fsrs", "code", "text/javascript", "ts-fsrs.js", ["review"], 40,
            attrs=[label("fcLib", "ts-fsrs"), label("disableVersioning", "true", 20)])
-optimizer = note("opt", "optimizer", "code", "text/javascript", "optimizer.js", ["review"], 40,
+optimizer = note("opt", "optimizer", "code", "text/javascript", "optimizer.js", ["review"], 50,
                  attrs=[label("fcLib", "optimizer"), label("disableVersioning", "true", 20)])
-about = note("about", "About and licenses", "text", "text/html", "About and licenses.html", ["review"], 50)
+about = note("about", "About and licenses", "text", "text/html", "About and licenses.html", ["review"], 60)
 # The Review render note is the top-level folder: its children hold the UI, the state and the library.
 review = note("review", "Flashcards", "render", "", "Flashcards.html", [], 10, dir_name="Flashcards",
               attrs=[{"type": "relation", "name": "renderNote", "value": ID["ui"], "isInheritable": False, "position": 10}],
-              children=[review_ui, state, lib, optimizer, about])
+              children=[review_ui, state, settings, lib, optimizer, about], archived=False)
 
 meta = {"formatVersion": 2, "appVersion": "0.99.0", "files": [review]}
 
@@ -91,6 +94,7 @@ files = {
     "Flashcards/Review UI.html": (SRC / "review-ui.html").read_text().replace("__VERSION__", VERSION),
     "Flashcards/Review UI/review.js": (SRC / "review.js").read_text(),
     "Flashcards/srs-state.json": (SRC / "srs-state.json").read_text(),
+    "Flashcards/srs-settings.json": (SRC / "srs-settings.json").read_text(),
     "Flashcards/ts-fsrs.js": libs["ts-fsrs"][0],
     "Flashcards/About and licenses.html": ABOUT,
     "Flashcards/optimizer.js": (SRC / "optimizer.js").read_text(),
