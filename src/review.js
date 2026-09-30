@@ -10,7 +10,7 @@ const { libs, notes, db, storedSettings } = await api.runOnBackend(() => {
     noteId: n.noteId, title: n.title, mime: n.mime, content: n.getContent()
   }));
   const db = JSON.parse(api.searchForNote('#srsState').getContent() || '{}');
-  const settingsNote = api.searchForNote('#srsSettings');   // null when only an older version's notes are installed
+  const settingsNote = api.searchForNote('#srsSettings');
   const storedSettings = settingsNote ? JSON.parse(settingsNote.getContent() || '{}') : null;
   return { libs, notes, db, storedSettings };
 });
@@ -123,15 +123,12 @@ const DEFAULTS = {
   weights: '',              // FSRS weights (21 numbers); empty = defaults
 };
 const DEFAULT_W = generatorParameters().w;
-// Settings live in their own note (#srsSettings). Older versions kept them inside srs-state; those are moved over
-// the first time the settings note is still empty. Without a settings note the old location keeps working.
-const hasSettingsNote = storedSettings !== null;
-const legacySettings = db.settings;
-const migrateSettings = hasSettingsNote && legacySettings && !Object.keys(storedSettings).length;
-const savedSettings = hasSettingsNote ? (migrateSettings ? legacySettings : storedSettings) : (legacySettings ?? {});
-if (hasSettingsNote) delete db.settings;
-for (const k of ['spread', 'loadBalance', 'fuzz']) delete savedSettings[k];   // options of earlier versions; the load balancer is always on
-let S = { ...DEFAULTS, ...savedSettings };
+// Settings live in their own note (#srsSettings).
+if (storedSettings === null) {
+  $root.html('<div class="fc-empty"><h3>Settings note not found</h3><p>This version needs the <code>srs-settings</code> note (label <code>#srsSettings</code>). Import the package again.</p></div>');
+  throw new Error('srs-settings note (#srsSettings) not found');
+}
+let S = { ...DEFAULTS, ...storedSettings };
 
 const STEP = /^\d+[mhd]$/;
 const words = str => str.split(/[\s,\[\]]+/).filter(Boolean);
@@ -247,12 +244,9 @@ function save() {
   saving = saving.then(() => api.runOnBackend(j => { api.searchForNote('#srsState').setContent(j); }, [json]));
 }
 function saveSettings() {
-  if (!hasSettingsNote) { db.settings = { ...S }; return save(); }
   const json = JSON.stringify(S);
   saving = saving.then(() => api.runOnBackend(j => { api.searchForNote('#srsSettings').setContent(j); }, [json]));
 }
-if (migrateSettings) saveSettings();   // copy the old settings into their note …
-if (hasSettingsNote && legacySettings) save();   // … and drop them from srs-state
 
 // ---------- UI ----------
 $root.html(`

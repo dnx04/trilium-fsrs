@@ -138,7 +138,7 @@ Everything is in two JSON notes. `srs-state` holds `cards` (the FSRS state of ea
 
 ## Updating
 
-Importing the zip again creates a second `Flashcards` tree with empty `srs-state` and `srs-settings` notes. To keep your history and settings, copy the content of your old `srs-state` and `srs-settings` notes into the new ones, then delete the old tree. (If you only copy `srs-state` from a version before 1.0.2, its settings are moved into `srs-settings` automatically the first time you open the page.) Alternatively, replace only the notes that changed (`review.js`, `Review UI`, `optimizer`); `review.js` and `optimizer` should always be updated together. Without an `srs-settings` note the page simply keeps storing settings in `srs-state`, as older versions did.
+Importing the zip again creates a second `Flashcards` tree with empty `srs-state` and `srs-settings` notes. To keep your history and settings, copy the content of your old `srs-state` and `srs-settings` notes into the new ones, then delete the old tree. Alternatively, replace only the notes that changed (`review.js`, `Review UI`, `optimizer`); `review.js` and `optimizer` should always be updated together.
 
 ## Building from source
 

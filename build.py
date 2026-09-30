@@ -9,7 +9,7 @@ Then in Trilium: right-click a note -> Import into note -> pick the zip, UNTICK 
 import html, json, sys, urllib.request, zipfile
 from pathlib import Path
 
-VERSION = "1.0.2"   # shown in the footer of the Review UI; release tags must be "v" + this
+VERSION = "1.0.0rc2"   # shown in the footer of the Review UI; release tags must be "v" + this
 
 HERE = Path(__file__).parent
 SRC = HERE / "src"
